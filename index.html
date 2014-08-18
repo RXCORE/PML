@@ -1,0 +1,340 @@
+<!doctype html>
+<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
+<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen">
+  <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="javascripts/script.js"></script>
+
+  <title>Practical Machine Learning - Prediction Model</title>
+  <meta name="description" content="">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <header>
+      <h1 class="title">Practical Machine Learning - Prediction Model</h1>
+    </header>
+    <div id="container">
+      <p class="tagline"></p>
+      <div id="main" role="main">
+        <div class="download-bar">
+        <div class="inner">
+          <a href="https://github.com/RXCORE/PRACTICAL-MACHINE/tarball/master" class="download-button tar"><span>Download</span></a>
+          <a href="https://github.com/RXCORE/PRACTICAL-MACHINE/zipball/master" class="download-button zip"><span>Download</span></a>
+          <a href="https://github.com/RXCORE/PRACTICAL-MACHINE" class="code">View Practical Machine Learning - Prediction Model on GitHub</a>
+        </div>
+        <span class="blc"></span><span class="trc"></span>
+        </div>
+        <article class="markdown-body">
+          <hr><h1>
+<a name="practical-machine-learning-prediction-model-assignment-write-up" class="anchor" href="#practical-machine-learning-prediction-model-assignment-write-up"><span class="octicon octicon-link"></span></a>Practical Machine Learning: Prediction Model Assignment Write-up</h1>
+
+<h2>
+<a name="ron-rick-chua" class="anchor" href="#ron-rick-chua"><span class="octicon octicon-link"></span></a>Ron Rick Chua</h2>
+
+<h2>
+<a name="monday-august-18-2014" class="anchor" href="#monday-august-18-2014"><span class="octicon octicon-link"></span></a>Monday, August 18, 2014</h2>
+
+<hr><h2>
+<a name="synopsis" class="anchor" href="#synopsis"><span class="octicon octicon-link"></span></a>Synopsis:</h2>
+
+<p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a> (see the section on the Weight Lifting Exercise Dataset). </p>
+
+<p>We will use the data mentioned above to develop a predictive model for this classes.</p>
+
+<p>Loading library used.</p>
+
+<div class="highlight highlight-r"><pre><span class="kn">library</span><span class="p">(</span>ggplot2<span class="p">)</span>
+<span class="kn">library</span><span class="p">(</span>lattice<span class="p">)</span>
+<span class="kn">library</span><span class="p">(</span>caret<span class="p">)</span>
+<span class="kn">library</span><span class="p">(</span>randomForest<span class="p">)</span>
+<span class="kn">library</span><span class="p">(</span>rpart<span class="p">)</span>
+</pre></div>
+
+<p>Clearing Workspace</p>
+
+<div class="highlight highlight-r"><pre><span class="kp">rm</span><span class="p">(</span><span class="kt">list</span><span class="o">=</span><span class="kp">ls</span><span class="p">())</span>
+</pre></div>
+
+<p>Loading the Data Sets of Testing and Training to R. </p>
+
+<div class="highlight highlight-r"><pre>TrainingSet <span class="o">&lt;-</span>read.csv<span class="p">(</span><span class="s">"pml-training.csv"</span><span class="p">)</span>
+TestingSet  <span class="o">&lt;-</span>read.csv<span class="p">(</span><span class="s">"pml-testing.csv"</span> <span class="p">)</span>
+</pre></div>
+
+<h2>
+<a name="exploring-the-data-set" class="anchor" href="#exploring-the-data-set"><span class="octicon octicon-link"></span></a>Exploring the Data Set</h2>
+
+<p>For Training Set:</p>
+
+<div class="highlight highlight-r"><pre><span class="c1"># Number of rows:</span>
+<span class="kp">nrow</span><span class="p">(</span>TrainingSet<span class="p">)</span>
+</pre></div>
+
+<pre><code>## [1] 19622
+</code></pre>
+
+<div class="highlight highlight-r"><pre><span class="c1"># Number of columns:</span>
+<span class="kp">ncol</span><span class="p">(</span>TrainingSet<span class="p">)</span>
+</pre></div>
+
+<pre><code>## [1] 160
+</code></pre>
+
+<div class="highlight highlight-r"><pre><span class="c1">#Summary details:</span>
+<span class="kp">summary</span><span class="p">(</span>TrainingSet<span class="p">[,</span><span class="kt">c</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="m">2</span><span class="p">,</span><span class="m">159</span><span class="o">:</span><span class="m">160</span><span class="p">)])</span>
+</pre></div>
+
+<pre><code>##        X            user_name    magnet_forearm_z classe  
+##  Min.   :    1   adelmo  :3892   Min.   :-973     A:5580  
+##  1st Qu.: 4906   carlitos:3112   1st Qu.: 191     B:3797  
+##  Median : 9812   charles :3536   Median : 511     C:3422  
+##  Mean   : 9812   eurico  :3070   Mean   : 394     D:3216  
+##  3rd Qu.:14717   jeremy  :3402   3rd Qu.: 653     E:3607  
+##  Max.   :19622   pedro   :2610   Max.   :1090
+</code></pre>
+
+<p>Using a Scatterplot Matrices for visual reference</p>
+
+<div class="highlight highlight-r"><pre>pairs<span class="p">(</span>TrainingSet<span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="m">10000</span><span class="p">,</span><span class="m">1</span><span class="o">:</span><span class="m">10</span><span class="p">])</span>
+</pre></div>
+
+<p><img src="figure/unnamed-chunk-51.png" alt="plot of chunk unnamed-chunk-5"></p>
+
+<div class="highlight highlight-r"><pre>pairs<span class="p">(</span>TrainingSet<span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="m">10000</span><span class="p">,</span><span class="m">11</span><span class="o">:</span><span class="m">20</span><span class="p">])</span>
+</pre></div>
+
+<p><img src="figure/unnamed-chunk-52.png" alt="plot of chunk unnamed-chunk-5"></p>
+
+<div class="highlight highlight-r"><pre>pairs<span class="p">(</span>TrainingSet<span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="m">10000</span><span class="p">,</span><span class="m">21</span><span class="o">:</span><span class="m">30</span><span class="p">])</span>
+</pre></div>
+
+<p><img src="figure/unnamed-chunk-53.png" alt="plot of chunk unnamed-chunk-5"></p>
+
+<h2>
+<a name="getting-and-cleaning-the-data-set" class="anchor" href="#getting-and-cleaning-the-data-set"><span class="octicon octicon-link"></span></a>Getting and Cleaning the Data Set</h2>
+
+<p>There are 160 columns in the Training Set, and we will be excluding columns with NA values.</p>
+
+<div class="highlight highlight-r"><pre>NewTraining<span class="o">&lt;-</span>TrainingSet
+NewTraining<span class="p">[</span> NewTraining <span class="o">==</span> <span class="s">''</span> <span class="o">|</span> NewTraining <span class="o">==</span> <span class="s">'NA'</span><span class="p">]</span> <span class="o">&lt;-</span> <span class="kc">NA</span>
+indx <span class="o">&lt;-</span><span class="kp">which</span><span class="p">(</span><span class="kp">colSums</span><span class="p">(</span><span class="kp">is.na</span><span class="p">(</span>NewTraining<span class="p">))</span><span class="o">!=</span><span class="m">0</span><span class="p">)</span>
+NewTraining<span class="o">&lt;-</span>NewTraining<span class="p">[,</span> <span class="o">-</span>indx<span class="p">]</span>
+NewTraining<span class="o">&lt;-</span>NewTraining<span class="p">[,</span><span class="o">-</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="m">7</span><span class="p">)]</span>
+</pre></div>
+
+<h2>
+<a name="validate-data-set" class="anchor" href="#validate-data-set"><span class="octicon octicon-link"></span></a>Validate Data Set</h2>
+
+<p>Creating a Data set that are Valid, This is for Cross validating with the Training Set.</p>
+
+<div class="highlight highlight-r"><pre>InTraining  <span class="o">&lt;-</span> createDataPartition<span class="p">(</span>y<span class="o">=</span>NewTraining<span class="o">$</span>classe<span class="p">,</span>p<span class="o">=</span><span class="m">0.70</span><span class="p">,</span><span class="kt">list</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">)</span>
+NewTraining <span class="o">&lt;-</span> NewTraining<span class="p">[</span>InTraining<span class="p">,]</span>
+ValidateSet <span class="o">&lt;-</span> NewTraining<span class="p">[</span><span class="o">-</span>InTraining<span class="p">,]</span>
+</pre></div>
+
+<h2>
+<a name="prediction-model-set" class="anchor" href="#prediction-model-set"><span class="octicon octicon-link"></span></a>Prediction Model Set</h2>
+
+<p>Random Forest we will be using to train our Prediction Model set to predict the weight lifting quality in the Training Set.</p>
+
+<div class="highlight highlight-r"><pre>Pmodel <span class="o">&lt;-</span> train<span class="p">(</span>classe<span class="o">~</span><span class="m">.</span><span class="p">,</span> data<span class="o">=</span>NewTraining<span class="p">,</span> method <span class="o">=</span> <span class="s">"rf"</span><span class="p">,</span> tuneLength <span class="o">=</span> <span class="m">1</span><span class="p">,</span> ntree <span class="o">=</span> <span class="m">25</span><span class="p">)</span>
+<span class="kp">print</span><span class="p">(</span>Pmodel<span class="p">)</span>
+</pre></div>
+
+<pre><code>## Random Forest 
+## 
+## 13737 samples
+##    52 predictors
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Bootstrapped (25 reps) 
+## 
+## Summary of sample sizes: 13737, 13737, 13737, 13737, 13737, 13737, ... 
+## 
+## Resampling results
+## 
+##   Accuracy  Kappa  Accuracy SD  Kappa SD
+##   1         1      0.002        0.002   
+## 
+## Tuning parameter 'mtry' was held constant at a value of 7
+## 
+</code></pre>
+
+<h2>
+<a name="evaluating-the-model" class="anchor" href="#evaluating-the-model"><span class="octicon octicon-link"></span></a>Evaluating the Model</h2>
+
+<p>Using Confussion Matrix to evaluate the Prediction Model set versus the Validate Data set.</p>
+
+<div class="highlight highlight-r"><pre>confusionMatrix<span class="p">(</span>predict<span class="p">(</span>Pmodel<span class="p">,</span> ValidateSet<span class="p">),</span> ValidateSet<span class="o">$</span>classe<span class="p">)</span>
+</pre></div>
+
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1187    0    0    0    0
+##          B    0  773    0    0    0
+##          C    0    0  735    0    0
+##          D    0    0    0  672    0
+##          E    0    0    0    0  765
+## 
+## Overall Statistics
+##                                     
+##                Accuracy : 1         
+##                  95% CI : (0.999, 1)
+##     No Information Rate : 0.287     
+##     P-Value [Acc &gt; NIR] : &lt;2e-16    
+##                                     
+##                   Kappa : 1         
+##  Mcnemar's Test P-Value : NA        
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity             1.000    1.000    1.000    1.000    1.000
+## Specificity             1.000    1.000    1.000    1.000    1.000
+## Pos Pred Value          1.000    1.000    1.000    1.000    1.000
+## Neg Pred Value          1.000    1.000    1.000    1.000    1.000
+## Prevalence              0.287    0.187    0.178    0.163    0.185
+## Detection Rate          0.287    0.187    0.178    0.163    0.185
+## Detection Prevalence    0.287    0.187    0.178    0.163    0.185
+## Balanced Accuracy       1.000    1.000    1.000    1.000    1.000
+</code></pre>
+
+<p>Visual Representation of accuracy</p>
+
+<div class="highlight highlight-r"><pre>plot<span class="p">(</span>predict<span class="p">(</span>Pmodel<span class="p">,</span>newdata<span class="o">=</span>ValidateSet<span class="p">[,</span><span class="o">-</span><span class="kp">ncol</span><span class="p">(</span>ValidateSet<span class="p">)]),</span>ValidateSet<span class="o">$</span>classe<span class="p">,</span> xlab<span class="o">=</span><span class="s">"Validate Set"</span><span class="p">,</span> ylab<span class="o">=</span><span class="s">"Prediction Model Set"</span><span class="p">,</span>col <span class="o">=</span> <span class="kt">c</span><span class="p">(</span><span class="s">"black"</span><span class="p">,</span><span class="s">"red"</span><span class="p">,</span> <span class="s">"blue"</span><span class="p">,</span><span class="s">"green"</span><span class="p">,</span><span class="s">"yellow"</span><span class="p">))</span>
+</pre></div>
+
+<p><img src="figure/unnamed-chunk-10.png" alt="plot of chunk unnamed-chunk-10"></p>
+
+<pre><code>Note on Class:
+A: Exactly according to the specification
+B: Throwing the elbows to the front
+C: Lifting the dumbbell only halfway
+D: Lowering the dumbbell only halfway
+E: Throwing the hips to the front
+</code></pre>
+
+<h2>
+<a name="compuring-for-the-accuracy-of-the-model" class="anchor" href="#compuring-for-the-accuracy-of-the-model"><span class="octicon octicon-link"></span></a>Compuring for the Accuracy of the Model</h2>
+
+<div class="highlight highlight-r"><pre>accurate <span class="o">&lt;-</span> <span class="kt">c</span><span class="p">(</span><span class="kp">as.numeric</span><span class="p">(</span>predict<span class="p">(</span>Pmodel<span class="p">,</span>newdata<span class="o">=</span>ValidateSet<span class="p">[,</span><span class="o">-</span><span class="kp">ncol</span><span class="p">(</span>ValidateSet<span class="p">)])</span><span class="o">==</span>ValidateSet<span class="o">$</span>classe<span class="p">))</span>
+MAccuracy <span class="o">&lt;-</span> <span class="kp">sum</span><span class="p">(</span>accurate<span class="p">)</span><span class="o">*</span><span class="m">100</span><span class="o">/</span><span class="kp">nrow</span><span class="p">(</span>ValidateSet<span class="p">)</span>
+<span class="kp">message</span><span class="p">(</span><span class="s">"Accuracy of Prediction Model set VS Validate Data set = "</span><span class="p">,</span> <span class="kp">format</span><span class="p">(</span><span class="kp">round</span><span class="p">(</span>MAccuracy<span class="p">,</span> <span class="m">2</span><span class="p">),</span> nsmall<span class="o">=</span><span class="m">2</span><span class="p">),</span><span class="s">"%"</span><span class="p">)</span>
+</pre></div>
+
+<pre><code>## Accuracy of Prediction Model set VS Validate Data set = 100.00%
+</code></pre>
+
+<h1>
+<a name="conclusion" class="anchor" href="#conclusion"><span class="octicon octicon-link"></span></a>Conclusion</h1>
+
+<p>A 100% accuracy was computed here,  but caution must be taken due to the use of Random forest, tends to Overfitting.</p>
+
+<pre><code>
+
+</code></pre>
+
+<h1>
+<a name="predictions-on-the-testing-set" class="anchor" href="#predictions-on-the-testing-set"><span class="octicon octicon-link"></span></a>Predictions on the testing set:</h1>
+
+<p>For Testing Set:</p>
+
+<div class="highlight highlight-r"><pre><span class="c1"># Number of rows:</span>
+<span class="kp">nrow</span><span class="p">(</span>TestingSet<span class="p">)</span>
+</pre></div>
+
+<pre><code>## [1] 20
+</code></pre>
+
+<div class="highlight highlight-r"><pre><span class="c1"># Number of columns:</span>
+<span class="kp">ncol</span><span class="p">(</span>TestingSet<span class="p">)</span>
+</pre></div>
+
+<pre><code>## [1] 160
+</code></pre>
+
+<div class="highlight highlight-r"><pre><span class="c1"># Summary details:</span>
+<span class="kp">summary</span><span class="p">(</span>TestingSet<span class="p">[,</span><span class="kt">c</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="m">2</span><span class="p">,</span><span class="m">159</span><span class="o">:</span><span class="m">160</span><span class="p">)])</span>
+</pre></div>
+
+<pre><code>##        X            user_name magnet_forearm_z   problem_id   
+##  Min.   : 1.00   adelmo  :1   Min.   :-32      Min.   : 1.00  
+##  1st Qu.: 5.75   carlitos:3   1st Qu.:275      1st Qu.: 5.75  
+##  Median :10.50   charles :1   Median :492      Median :10.50  
+##  Mean   :10.50   eurico  :4   Mean   :460      Mean   :10.50  
+##  3rd Qu.:15.25   jeremy  :8   3rd Qu.:662      3rd Qu.:15.25  
+##  Max.   :20.00   pedro   :3   Max.   :884      Max.   :20.00
+</code></pre>
+
+<h2>
+<a name="results-of-the-prediction-to-testing-set" class="anchor" href="#results-of-the-prediction-to-testing-set"><span class="octicon octicon-link"></span></a>Results of the Prediction to Testing Set</h2>
+
+<div class="highlight highlight-r"><pre>Ptest<span class="o">&lt;-</span>predict<span class="p">(</span>Pmodel<span class="p">,</span> TestingSet<span class="p">)</span>
+<span class="kp">print</span><span class="p">(</span>Ptest<span class="p">)</span>
+</pre></div>
+
+<pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
+## Levels: A B C D E
+</code></pre>
+
+<pre><code>
+
+</code></pre>
+
+<h1>
+<a name="references" class="anchor" href="#references"><span class="octicon octicon-link"></span></a>References</h1>
+
+<p>The Data used for this project can be downloaded at:</p>
+
+<p>Training set
+<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a></p>
+
+<p>Test Set
+<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a></p>
+
+<p>I would like to cite Human Activity Recognition publication and the Major Collaborators:</p>
+
+<ul>
+<li>Wallace Ugulino </li>
+<li>Eduardo Velloso</li>
+<li>Hugo Fuks</li>
+</ul><p>Which allows us to use their data set for our course project.</p>
+
+<p>Web Site: <a href="http://groupware.les.inf.puc-rio.br/har#ixzz3AR2M0igh">http://groupware.les.inf.puc-rio.br/har#ixzz3AR2M0igh</a></p>
+        </article>
+      </div>
+    </div>
+    <footer>
+      <div class="owner">
+      <p><a href="https://github.com/RXCORE" class="avatar"><img src="https://avatars0.githubusercontent.com/u/6602462?v=2&amp;s=60" width="48" height="48"></a> <a href="https://github.com/RXCORE">RXCORE</a> maintains <a href="https://github.com/RXCORE/PRACTICAL-MACHINE">Practical Machine Learning - Prediction Model</a></p>
+
+
+      </div>
+      <div class="creds">
+        <small>This page generated using <a href="http://pages.github.com/">GitHub Pages</a><br>theme by <a href="https://twitter.com/jonrohan/">Jon Rohan</a></small>
+      </div>
+    </footer>
+  </div>
+  <div class="current-section">
+    <a href="#top">Scroll to top</a>
+    <a href="https://github.com/RXCORE/PRACTICAL-MACHINE/tarball/master" class="tar">tar</a><a href="https://github.com/RXCORE/PRACTICAL-MACHINE/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
+    <p class="name"></p>
+  </div>
+
+  
+</body>
+</html>
