@@ -1,7 +1,7 @@
 ---
 title: "Practical Machine Learning: Prediction Model Assignment Write-up"
 author: "Ron Rick Chua"
-date: "Monday, August 18, 2014"
+date: "Monday, August 18, 2014 "
 
 ---
 
